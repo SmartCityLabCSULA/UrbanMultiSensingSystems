@@ -1,0 +1,106 @@
+#define PIN_GATE_IN 2
+#define IRQ_GATE_IN  0
+#define PIN_LED_OUT 13
+#define PIN_ANALOG_IN A0
+
+//correction factors at different dB level
+const double dBAnalogQuiet = 5;
+const double dBAnalogModerate =10;
+const double dBAnalogLoud = 15;
+int count;
+
+
+  float calculateDecibels(int x, char c){
+  float decibelsCalculated;  
+    if (c == 'q')
+      decibelsCalculated = 20 * log10(x/dBAnalogQuiet);
+    if (c == 'm')
+      decibelsCalculated = 20 * log10(x/dBAnalogModerate);
+    if (c == 'l')
+      decibelsCalculated = 20 * log10(x/dBAnalogLoud);  
+  
+  return (decibelsCalculated);
+  }
+
+void soundISR()
+{
+  int pin_val;
+
+  pin_val = digitalRead(PIN_GATE_IN);
+  digitalWrite(PIN_LED_OUT, pin_val);   
+}
+
+void setup()
+//Baud rate and standard initialization
+{
+  Serial.begin(9600);
+  Serial.println("Initialized");
+
+
+}
+
+void loop()
+{
+  int value, i;
+  float decibelsValueQuiet = 25;
+  float decibelsValueModerate =55;
+  float decibelsValueLoud = 65;
+  float valueDb;
+  
+  value = analogRead(PIN_ANALOG_IN);
+
+  //showing the status of the noise level. change to the db is or something
+  Serial.print("Status: ");
+
+    if (value < 13)
+  {
+
+    Serial.print("Quiet. Value: ");
+    Serial.print(value);
+    Serial.print("  ");
+    
+    decibelsValueQuiet += calculateDecibels(value, 'q');
+
+    Serial.println(decibelsValueQuiet);
+    valueDb = decibelsValueQuiet;
+    count = count+1;
+  }
+  
+  
+  
+  else if ((value > 13) && ( value <= 23) )
+  {
+   
+    Serial.print("Moderate. Value: ");
+    Serial.print(value);
+    Serial.print("  ");
+    
+    decibelsValueModerate += calculateDecibels(value, 'm');
+    
+    Serial.println(decibelsValueModerate);
+
+    valueDb = decibelsValueModerate;
+    count = count+1;
+    
+  }
+  else if(value > 22)
+  {
+   
+    Serial.print("Loud. Value: ");
+    Serial.print(value);
+    Serial.print("  ");
+
+    decibelsValueLoud += calculateDecibels(value, 'l');
+
+  
+    Serial.println(decibelsValueLoud);
+    //Serial.print(decibelsValueLoud);
+    
+    valueDb = decibelsValueLoud;
+    count = count+1;
+  }
+  delay(1000);
+
+
+  
+}
